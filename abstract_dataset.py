@@ -26,10 +26,6 @@ class AbstractDataset(Dataset):
     def single_load(self, id):
         pass
 
-    @abstractmethod
-    def get_observation_tensor(self, id):
-        pass
-
     def __len__(self):
         return self.size
 
@@ -40,6 +36,7 @@ class AbstractDataset(Dataset):
             return self.numerous_load(idx)
 
     def numerous_load(self, idx):
+        print("Hello from numerous load")
         for id in idx:
             return self.single_load(id)
 
@@ -47,25 +44,26 @@ class AbstractDataset(Dataset):
         tree = ET.parse(self.xml_dataset_path)
 
 
-    def view_by_parameter(self, callables, names, color_by_target=True, save_to_disk=False):
+    def view_by_parameter(self, callables, names, cap_points=5000, color_by_target=True, save_to_disk=False):
         """
 
         :param callables:
         :param names:
+        :param cap_points:
         :param color_by_target:
         :param save_to_disk:
         :return:
         """
-        if isinstance(callable, list):
-            if len(callable) > 3: raise Exception("Cannot visualize more than 3 parameters at a time")
-        else: callable = (callable)
+        if isinstance(callables, list):
+            if len(callables) > 3: raise Exception("Cannot visualize more than 3 parameters at a time")
+        else: callables = (callables)
 
-        dims = len(callable)
+        dims = len(callables)
         features = torch.zeros(dims, len(self))
         for i in range(len(self)):
             observation = self.get_observation_tensor(i)
             for j in range(dims):
-                features[j,i] = callable[j](observation)
+                features[j,i] = callables[j](observation)
 
 
 
