@@ -1,8 +1,5 @@
 from abstract_dataset import AbstractDataset
 import xml.etree.ElementTree as ET
-import h5py
-import numpy as np
-import torch
 from ecg_dataset_utils import get_tensor_from_filename, viewECG
 
 class EcgDataset(AbstractDataset):
@@ -30,7 +27,7 @@ class EcgDataset(AbstractDataset):
         :param id: (int)
         :return: ecg, target, id
         """
-        return get_tensor_from_filename(self.filenames[id], self.data_path, self.n_leads), self.targets[id], self.ids[id]
+        return get_tensor_from_filename(self.filenames[id], n_leads=self.n_leads, give_path=self.data_path), self.targets[id], self.ids[id]
 
 
     def view_encounter(self, id, lead_id=None, save_to_disk=False):
@@ -41,7 +38,7 @@ class EcgDataset(AbstractDataset):
         :return:
         """
         print("Viewing ECG with filename: " + self.filenames[id])
-        viewECG(self.filenames[id], self.n_leads, lead_id, save_to_disk)
+        viewECG(self.filenames[id], n_leads=self.n_leads, lead_id=lead_id, give_path=self.data_path, save_to_disk=save_to_disk)
 
 
     def parse_assign_metadata(self):

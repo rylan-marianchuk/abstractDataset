@@ -10,12 +10,12 @@ class AbstractDataset(Dataset):
         self.xml_dataset_path = xml_dataset_path
         self.data_path = data_path
         self.desc: str
-        self.filenames: list
+        self.filenames: list = []
         self.targets = torch.Tensor([])
-        self.size: int
+        self.n_obs: int
         self.continuous_targets: bool
         self.parse_assign_metadata_abstract()
-        self.ids = torch.LongTensor(range(self.size))
+        self.ids = torch.LongTensor(range(self.n_obs))
 
 
     @abstractmethod
@@ -27,7 +27,7 @@ class AbstractDataset(Dataset):
         pass
 
     def __len__(self):
-        return self.size
+        return self.n_obs
 
     def __getitem__(self, idx):
         if isinstance(idx, int):
@@ -42,6 +42,14 @@ class AbstractDataset(Dataset):
 
     def parse_assign_metadata_abstract(self):
         tree = ET.parse(self.xml_dataset_path)
+        self.desc = tree.find(".//desc")
+        self.n_obs = int(tree.find(".//n_obs").text)
+        self.targets = torch.zeros(self.n_obs, dtype=torch.float32)
+        self.continuous_targets = bool(tree.find(".//continuous_target").text)
+        all_obs = tree.find(".//dataset").findall("obs")
+        for i,obs in enumerate(all_obs):
+            self.filenames.append(obs.find(".//filename_uid").text)
+            self.targets[i] = float(obs.find(".//target").text)
 
 
     def view_by_parameter(self, callables, names, cap_points=5000, color_by_target=True, save_to_disk=False):

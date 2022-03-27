@@ -3,8 +3,7 @@ import h5py
 import numpy as np
 import plotly.graph_objs as go
 from plotly.subplots import make_subplots
-
-ecg_dir = "/home/rylan/ecgh5/"
+import os
 
 def augment_to_12_leads(ecg_8_lead):
     """
@@ -13,7 +12,6 @@ def augment_to_12_leads(ecg_8_lead):
     :param ecg_8_lead: (tensor) shape=(8, 5000) eight lead Electrocardiogram (8 leads acquired)
     :return: (tensor) shape=(12, 5000)
     """
-    #TODO verify assumption that leads are ordered I, II, V1, ..., V6
 
     # Compute the final leads
     # III
@@ -37,7 +35,7 @@ def get_tensor_from_filename(filename, n_leads=8, give_path=None):
     if give_path is not None:
         f = h5py.File(give_path + filename)
     else:
-        f = h5py.File(ecg_dir + filename)
+        f = h5py.File(os.getenv("ECG_DIR") + filename)
     np_ecg = np.array(f["ECG"])
     ecg = torch.from_numpy(np_ecg).view(8, 5000)
     if n_leads == 12:
