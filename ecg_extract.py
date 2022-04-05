@@ -107,5 +107,5 @@ def autocorr_similarity(ecg, lead=0):
     return torch.sum(pairwiseM, dim=1).sum().item()
 
 ds = EcgDataset(None)
-ds.view_by_parameter((autocorr_similarity, relative_power_ratio), ("AutoCorr", "RelativePWRR"))
+ds.view_by_parameter((autocorr_similarity, relative_power_ratio, curve_length), ("AutoCorr", "RelativePWRR", "CL"))
 

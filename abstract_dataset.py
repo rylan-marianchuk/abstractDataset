@@ -122,10 +122,10 @@ class AbstractDataset(Dataset):
             texts = ['id: {idval}<br>filename: {file}'.format(idval=id, file=self.filenames[id]) for id in ids]
 
         if dims == 3:
-            fig = go.Figure(go.Scatter3d(x=features[:, 0], y=features[:, 1], z=features[:2], mode='markers',
+            fig = go.Figure(go.Scatter3d(x=features[:, 0], y=features[:, 1], z=features[:, 2], mode='markers',
                                          hovertemplate=hovertemplate, text=texts,
-                                         marker=dict(color=colors, colorscale='Viridis', showscale=True)))
-            fig.update_layout(title=title, zaxis_title=names[2], yaxis_title=names[1], xaxis_title=names[0],
+                                         marker=dict(size=3.5, color=colors, colorscale='Viridis', showscale=True)))
+            fig.update_layout(title=title, scene=dict(zaxis_title=names[2], yaxis_title=names[1], xaxis_title=names[0]),
                               hoverlabel_align='right')
         else:
             if dims == 1:
