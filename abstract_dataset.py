@@ -134,7 +134,7 @@ class AbstractDataset(Dataset):
             else:
                 y = features[:, 1]
                 ytitle = names[1]
-            fig = go.Figure(go.Scatter2d(x=features[:, 0], y=y, mode='markers',
+            fig = go.Figure(go.Scatter(x=features[:, 0], y=y, mode='markers',
                                          hovertemplate=hovertemplate, text=texts,
                                          marker=dict(color=colors, colorscale='Viridis', showscale=True)))
             fig.update_layout(title=title, yaxis_title=ytitle, xaxis_title=names[0], hoverlabel_align='right')

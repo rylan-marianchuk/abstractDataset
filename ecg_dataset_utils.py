@@ -39,7 +39,7 @@ def get_tensor_from_filename(filename, n_leads=8, given_data_path=None):
     if given_data_path is not None:
         f = h5py.File(given_data_path + filename)
     else:
-        f = h5py.File(os.getenv("ECG_DIR") + filename)
+        f = h5py.File(os.getenv("ECGS_PATH") + filename)
     np_ecg = np.array(f["ECG"])
     ecg = torch.from_numpy(np_ecg).view(8, 5000)
     if n_leads == 12:

@@ -39,7 +39,7 @@ class EcgDataset(AbstractDataset):
         :param idx: (int)
         :return: ecg, target, id
         """
-        return get_tensor_from_filename(self.filenames[idx], n_leads=self.n_leads, given_data_path=self.data_path).unsqueeze(0), self.targets[idx], self.ids[idx]
+        return get_tensor_from_filename(self.filenames[idx], n_leads=self.n_leads, given_data_path=self.data_path), self.targets[idx], self.ids[idx]
 
 
     def view_encounter(self, id, lead_id=None, save_to_disk=False):
