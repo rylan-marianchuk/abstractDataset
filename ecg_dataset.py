@@ -16,19 +16,14 @@ class EcgDataset(AbstractDataset):
         :param transform: (callable object) the by-lead transform to apply in __getitem__()
         """
         # Use parameter as the path if it is a path, otherwise get the environment variable holding the path
-        if xml_dataset is not None:
-            if "/" in xml_dataset: xml_dataset = xml_dataset
-            else: xml_dataset = os.getenv("DATASETS_PATH") + xml_dataset
         if data_path is None: data_path = os.getenv("ECGS_PATH")
-
         super(EcgDataset, self).__init__(xml_dataset, data_path, slice)
-
         self.modality = "ECG"
         self.n_leads: int
         self.parse_assign_metadata()
 
 
-    def __getitem__(self, idx):
+    def __getitem__(self, id):
         """
         PyTorch executes this method in a multithread fashion
         The structure pulled out of this class by the DataLoader
@@ -36,10 +31,10 @@ class EcgDataset(AbstractDataset):
         for X, y, ids in loader:
             ...
         this method should return observation_tensor, target, id
-        :param idx: (int)
+        :param id: (int)
         :return: ecg, target, id
         """
-        return get_tensor_from_filename(self.filenames[idx], n_leads=self.n_leads, given_data_path=self.data_path), self.targets[idx], self.ids[idx]
+        return get_tensor_from_filename(self.filenames[id], n_leads=self.n_leads, given_data_path=self.data_path), self.targets[id], self.ids[id]
 
 
     def view_encounter(self, id, lead_id=None, save_to_disk=False):

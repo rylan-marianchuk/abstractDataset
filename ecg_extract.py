@@ -5,7 +5,7 @@ import math
 import numpy as np
 
 # All functions in this class must take an ecg parameter for type (tensor, numpy or torch) and shape=(8 or 12, 5000),
-# and an optional lead parameter. Each lead signal is a row
+# and lead parameter. Each lead signal is a row
 
 def relative_power_ratio(ecg, lead=0):
     """
@@ -106,6 +106,4 @@ def autocorr_similarity(ecg, lead=0):
         pairwiseM[j, i] = theta
     return torch.sum(pairwiseM, dim=1).sum().item()
 
-ds = EcgDataset(None)
-ds.view_by_parameter((autocorr_similarity, relative_power_ratio, curve_length), ("AutoCorr", "RelativePWRR", "CL"))
 

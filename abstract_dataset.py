@@ -1,6 +1,8 @@
 import os
 from abc import abstractmethod
 import xml.etree.ElementTree as ET
+
+import numpy as np
 from torch.utils.data import Dataset
 import torch
 import plotly.graph_objs as go
@@ -8,15 +10,18 @@ import plotly.figure_factory as ff
 
 class AbstractDataset(Dataset):
 
-    def __init__(self, xml_dataset_path, data_path, slice):
+    def __init__(self, xml_dataset, data_path, slice):
         """
         Populate filenames, targets, and extract the dataset metadata by parsing the given standardized xml dataset
         :param xml_dataset: (str) path to xml file outlining the entire dataset, generated according to standards TODO  (HERE)
         :param data_path: (str) path to directory containing all observations, named by filename_uid in the xml_dataset
         :param slice: (slice obj) if not None, slices the list of observations in xml_dataset
         """
+        if xml_dataset is not None:
+            if "/" in xml_dataset: self.xml_dataset_path = xml_dataset
+            else: self.xml_dataset_path = os.getenv("DATASETS_PATH") + xml_dataset
+        else: self.xml_dataset_path = None
         self.slice = slice
-        self.xml_dataset_path = xml_dataset_path
         self.data_path = data_path
         self.desc: str
         self.filenames: list = []
@@ -66,42 +71,56 @@ class AbstractDataset(Dataset):
         return
 
 
-    def view_by_parameter(self, callables, names, cap_points=1500, color_by_target=True, save_to_disk=False):
+    def view_by_parameter(self, callable_or_tensor, names, param=None, cap_points=1500, color_by_target=True, save_to_disk=False):
         """
         A general viewing utility of extractable features from the observations of this dataset
 
         :param callables: (tuple of callables) invoking callable[i] on an observation tensor from self.__getitem__()
                           should return a float
+                          OR
+                          (tensor) of computed features, callables[index] is a row (or scalar in 1D) of pre-computed
+                          features (max dim is 3) for id=index
         :param names: (tuple of str) names[i] describes the feature of callables[i]
+        :param param: any dtype to pass into the callables, can only handle one passable param.
         :param cap_points: (int) max amount of observations to extract features from. If not None, a random subset of
                            this dataset is selected for viewing
         :param color_by_target: (bool) whether the figure should color its points according to a colorscale of the target
                                 distribution
         :param save_to_disk: (bool) whether the figure should be immediately viewed or saved permanently to disk
-        :return: (tensor) features shape=(cap_points, len(callables)) dtype=torch.float32
         """
-        if isinstance(callables, tuple):
-            if len(callables) > 3: raise Exception("Cannot visualize more than 3 parameters at a time")
+        given_callables = True
+        if isinstance(callable_or_tensor, tuple):
+            if len(callable_or_tensor) > 3: raise Exception("Cannot visualize more than 3 parameters at a time")
+        elif isinstance(callable_or_tensor, np.ndarray) or isinstance(callables, torch.Tensor):
+            given_callables = False
+            features = callable_or_tensor
+            ids = torch.arange(0, features.shape[0])
+            dims = features.shape[1]
         else:
-            raise Exception("callables parameter should be a tuple")
+            raise Exception("callables parameter should be a tuple or tensor")
 
-        assert len(callables) == len(names)
+        if given_callables:
+            # Invoke the callables on the tensors of this dataset
+            callables = callable_or_tensor
+            assert len(callables) == len(names)
 
-        if cap_points is not None and cap_points < len(self):
-            # Select a random subset
-            ids = torch.randperm(len(self))[:cap_points]
-        else:
-            ids = torch.arange(0, len(self))
+            if cap_points is not None and cap_points < len(self):
+                # Select a random subset
+                ids = torch.randperm(len(self))[:cap_points]
+            else:
+                ids = torch.arange(0, len(self))
 
-        # Extract all the features by invoking the callables
-        dims = len(callables)
-        features = torch.zeros(ids.shape[0], dims)
-        filenames = []
-        for i, id in enumerate(ids):
-            observation = self[id][0]
-            filenames.append(self.filenames[id])
-            for j in range(dims):
-                features[i, j] = callables[j](observation)
+            # Extract all the features by invoking the callables
+            dims = len(callables)
+            features = torch.zeros(ids.shape[0], dims)
+            filenames = []
+            for i, id in enumerate(ids):
+                observation = self[id][0]
+                filenames.append(self.filenames[id])
+                for j in range(dims):
+                    if param is not None: features[i, j] = callables[j](observation, param)
+                    else: features[i, j] = callables[j](observation)
+
 
         # Display the figures according to provided dims and color of target
         if color_by_target:
@@ -124,7 +143,7 @@ class AbstractDataset(Dataset):
         if dims == 3:
             fig = go.Figure(go.Scatter3d(x=features[:, 0], y=features[:, 1], z=features[:, 2], mode='markers',
                                          hovertemplate=hovertemplate, text=texts,
-                                         marker=dict(size=3.5, color=colors, colorscale='Viridis', showscale=True)))
+                                         marker=dict(size=3.5, color=colors, colorscale='Plotly3', showscale=True)))
             fig.update_layout(title=title, scene=dict(zaxis_title=names[2], yaxis_title=names[1], xaxis_title=names[0]),
                               hoverlabel_align='right')
         else:
@@ -136,7 +155,7 @@ class AbstractDataset(Dataset):
                 ytitle = names[1]
             fig = go.Figure(go.Scatter(x=features[:, 0], y=y, mode='markers',
                                          hovertemplate=hovertemplate, text=texts,
-                                         marker=dict(color=colors, colorscale='Viridis', showscale=True)))
+                                         marker=dict(size=7.5, color=colors, colorscale='Plotly3', showscale=True)))
             fig.update_layout(title=title, yaxis_title=ytitle, xaxis_title=names[0], hoverlabel_align='right')
 
         if save_to_disk:
