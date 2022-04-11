@@ -135,6 +135,7 @@ class AbstractDataset(Dataset):
             hovertemplate += '<br>' + dim_name + ': %{' + var + ':.4f}'
 
         if color_by_target:
+            colorscale = [[0, "#118ab2"],  [1, "#ef476f"]]
             texts = ['id: {idval}<br>filename: {file}<br>target: {target}'.format(idval=id, file=self.filenames[id],
                                                                                   target=self.targets[id]) for id in ids]
         else:
@@ -155,7 +156,7 @@ class AbstractDataset(Dataset):
                 ytitle = names[1]
             fig = go.Figure(go.Scatter(x=features[:, 0], y=y, mode='markers',
                                          hovertemplate=hovertemplate, text=texts,
-                                         marker=dict(size=7.5, color=colors, colorscale='Plotly3', showscale=True)))
+                                         marker=dict(size=7.5, color=colors, colorscale=colorscale, showscale=True)))
             fig.update_layout(title=title, yaxis_title=ytitle, xaxis_title=names[0], hoverlabel_align='right')
 
         if save_to_disk:

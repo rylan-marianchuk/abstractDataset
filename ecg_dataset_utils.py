@@ -27,33 +27,45 @@ def augment_to_12_leads(ecg_8_lead):
     return ecg12
 
 
-def get_tensor_from_filename(filename, n_leads=8, given_data_path=None):
+def get_tensor_from_filename(euid_filename, n_leads=8, median=False, given_data_path=None):
     """
     Return the ecg as a PyTorch tensor given a filename
-    :param filename: (str) of the h5 filename NOT a path
-    :param n_leads: (int) if 12, the four remaining leads are computed
+    :param euid_filename: (str) of the h5 filename NOT a path
+    :param n_leads: (int) if 12, the four remaining leads are computeda
+    :param median: (bool) whether to view the median QRS, or if False, the entire 10 second rhythm
     :param given_data_path: (str) path where to read the filename from
     :return: (tensor) shape=(n_leads, 5000) where each row is a lead of the ecg in the following order:
              "I", "II", "V1", "V2", "V3", "V4", "V5", "V6", "III", "aVL", "aVR", "aVF"
     """
-    if given_data_path is not None:
-        f = h5py.File(given_data_path + filename)
+    path2file = os.getenv("ECGS_PATH")
+    if not median:
+        path2file += "rhythm/"
+        shape = 5000
     else:
-        f = h5py.File(os.getenv("ECGS_PATH") + filename)
+        path2file += "median/"
+        shape = 600
+
+    if given_data_path is not None:
+        path2file = given_data_path
+
+    path2file += euid_filename
+
+    f = h5py.File(path2file)
     np_ecg = np.array(f["ECG"])
-    ecg = torch.from_numpy(np_ecg).view(8, 5000)
+    ecg = torch.from_numpy(np_ecg).view(8, shape)
     if n_leads == 12:
         return augment_to_12_leads(ecg)
     return ecg
 
 
-def viewECG(filename, target=None, n_leads=8, lead_id=None, given_data_path=None, save_to_disk=False):
+def viewECG(filename, target=None, n_leads=8, lead_id=None, median=False, given_data_path=None, save_to_disk=False):
     """
     Utility for easily viewing an Electrocardiogram
     :param filename: (str) of the filename NOT a path
     :param target: (numeric) the target of the ECG
     :param n_leads: (int) 8 or 12
     :param lead_id: (int or str) if viewing only a single lead is desired, str must be in lead_names defined below
+    :param median: (bool) whether to view the median QRS, or if False, the entire 10 second rhythm
     :param given_data_path: (str) path where to read the filename from
     :param save_to_disk: (bool) whether the viewable object should be saved as a file and not temporarily viewed in browser
     :return: None
@@ -62,7 +74,7 @@ def viewECG(filename, target=None, n_leads=8, lead_id=None, given_data_path=None
     lead_names = ("I", "II", "V1", "V2", "V3", "V4", "V5", "V6") if n_leads == 8 \
         else ("I", "II", "V1", "V2", "V3", "V4", "V5", "V6", "III", "aVL", "aVR", "aVF")
 
-    ecg = get_tensor_from_filename(filename, n_leads, given_data_path)
+    ecg = get_tensor_from_filename(filename, n_leads, median, given_data_path)
 
     if lead_id is not None:
         if isinstance(lead_id, str):

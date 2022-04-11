@@ -5,20 +5,25 @@ import os
 
 class EcgDataset(AbstractDataset):
 
-    def __init__(self, xml_dataset, data_path=None,  slice=None, transform=None):
+    def __init__(self, xml_dataset, median=False, data_path=None, slice=None, transform=None):
         """
         :param xml_dataset: (str) xml file outlining the entire dataset, generated according to standards TODO  (HERE)
                             if no path & only filename, uses DATASETS_PATH system environment variable as
                             if path to the file, uses it and ignores system env var
+        :param median: (bool) whether to view the median QRS, or if False, the entire 10 second rhythm
         :param data_path: (str) path to directory containing all observations, named by filename_uid in the xml_dataset
                           if None, uses ECGS_PATH system environment variable
         :param slice: (slice obj) if not None, slices the list of observations in xml_dataset
         :param transform: (callable object) the by-lead transform to apply in __getitem__()
         """
         # Use parameter as the path if it is a path, otherwise get the environment variable holding the path
-        if data_path is None: data_path = os.getenv("ECGS_PATH")
+        if data_path is None:
+            data_path = os.getenv("ECGS_PATH")
+            if median: data_path += "median/"
+            else: data_path += "rhythm/"
         super(EcgDataset, self).__init__(xml_dataset, data_path, slice)
         self.modality = "ECG"
+        self.median = median
         self.n_leads: int
         self.parse_assign_metadata()
 
@@ -46,7 +51,8 @@ class EcgDataset(AbstractDataset):
         :return: None
         """
         print("Viewing ECG with filename: " + self.filenames[id])
-        viewECG(self.filenames[id], target=self.targets[id], n_leads=self.n_leads, lead_id=lead_id, given_data_path=self.data_path, save_to_disk=save_to_disk)
+        viewECG(self.filenames[id], target=self.targets[id], n_leads=self.n_leads, lead_id=lead_id, median=self.median,
+                given_data_path=self.data_path, save_to_disk=save_to_disk)
 
 
     def parse_assign_metadata(self):
