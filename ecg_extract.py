@@ -117,12 +117,15 @@ def skew(ecg, lead):
     :param lead: int lead id
     :return: float
     """
+    if isinstance(ecg, np.ndarray):
+        ecg = torch.from_numpy(ecg)
+
     signal = ecg[lead]
-    mu = np.mean(signal)
-    sd = np.std(signal)
+    mu = torch.mean(signal)
+    sd = torch.std(signal)
     signal -= mu
     signal /= sd
-    pows = np.power(signal, 3)
+    pows = torch.pow(signal, 3)
     return pows.sum() / signal.shape[0]
 
 
@@ -136,12 +139,15 @@ def kurtosis(ecg, lead):
     :param lead: int lead id
     :return: float
     """
+    if isinstance(ecg, np.ndarray):
+        ecg = torch.from_numpy(ecg)
+
     signal = ecg[lead]
-    mu = np.mean(signal)
-    sd = np.std(signal)
+    mu = torch.mean(signal)
+    sd = torch.std(signal)
     signal -= mu
     signal /= sd
-    pows = np.power(signal, 4)
+    pows = torch.pow(signal, 4)
     return pows.sum() / signal.shape[0]
 
 
@@ -156,8 +162,11 @@ def snr(ecg, lead):
     :param lead: int lead id
     :return: float
     """
+    if isinstance(ecg, np.ndarray):
+        ecg = torch.from_numpy(ecg)
+
     signal = ecg[lead]
-    return np.var(signal) / np.var(np.abs(signal))
+    return torch.var(signal) / torch.var(np.abs(signal))
 
 
 def hos(ecg, lead):
