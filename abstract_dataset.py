@@ -135,7 +135,7 @@ class AbstractDataset(Dataset):
             hovertemplate += '<br>' + dim_name + ': %{' + var + ':.4f}'
 
         if color_by_target:
-            colorscale = [[0, "#118ab2"],  [1, "#ef476f"]]
+            colorscale = [[0, "#118ab2"], [0.5, "#cbcbcb"], [1, "#ef476f"]]
             texts = ['id: {idval}<br>filename: {file}<br>target: {target}'.format(idval=id, file=self.filenames[id],
                                                                                   target=self.targets[id]) for id in ids]
         else:
@@ -163,7 +163,7 @@ class AbstractDataset(Dataset):
             fig.write_html(title + ".html")
         else:
             fig.show()
-
+        return fig
 
 
     def view_target_distribution(self, save_to_disk=False):
